@@ -37,7 +37,7 @@ app.get('/user', function(req,res){                                //get db reco
     });
 });
 
-//GET - WS end point to retrieve record of a user by id
+//GET -  end point to retrieve record of a user by id
 app.get('/user/:userid', function(req,res){
 
     var userid = req.params.userid;                                 //retrieve id pass in as params from req URI
@@ -77,7 +77,7 @@ app.post('/user', function(req,res){
     });
 });
 
-//PUT - Update user record by id
+//PUT - endpoint to Update user record by id
 app.put('/user/:userid', function(req,res){
 
     var userid = req.params.userid;                                             //retrieve id pass in as params from req URI
@@ -100,7 +100,7 @@ app.put('/user/:userid', function(req,res){
     });
 });
 
-//Delete user record by id
+//Delete - end point to del user record by id
 app.delete('/user/:userid', function(req,res){
 
     var userid = req.params.userid;                                         //retrieve id pass in as params from req URI
@@ -122,10 +122,10 @@ app.delete('/user/:userid', function(req,res){
 
 
 
-//GET - WS end point to retrieve DB records of all categories
+//GET - end point to get DB records of all categories
 app.get('/category', function(req,res){                                
 
-    categoryDB.getCategory(function(err,result){                        
+    categoryDB.getCategories(function(err,result){                        
         if (err){                                                           //if error
             res.status(500);                                                //return err response code
             res.send(`{"message":"${err}"}`);                               //return response err message in json
@@ -136,14 +136,56 @@ app.get('/category', function(req,res){
     });
 });
 
+//GET -  end point to get record of a category by id
+app.get('/category/:categoryid', function(req,res){
+
+    var categoryid = req.params.categoryid;                                 //retrieve id pass in as params from req URI
+    
+    categoryDB.getCategory(categoryid,function(err,result){                             //get record via model
+        if (err){                                                           //if error
+            res.status(500);                                                //return err response code
+            res.send(`{"message":"${err}"}`);                               //return response err message in json
+        } else {                                                            //if success
+            res.status(200);                                                //return success response code
+            if(Object.keys(result).length === 0){                           //if record not found, return err in json
+                res.send(`{"message":"Error - record id.${categoryid} not found"}`);    
+            }else{
+                res.send(result[0]);                                        //return single record found in json
+            }
+        }
+    });
+});
+
+//GET- WS endpoint to retrieve data of all products belonging to a category id <num>
+app.get('/category/:categoryid/product', function(req,res){                 
+
+    var categoryid = req.params.categoryid;                                           //retrieve catid pass in as params from req URI
+
+    productDB.getProductForCategory(categoryid,function(err,result){
+        if (err){                                                           //if error
+            res.status(500);                                                //return err response code
+            res.send(`{"message":"${err}"}`);                               //return response err message in json
+        } else {                                                            //if success
+            res.status(200);                                                //return success response code
+            if (Object.entries(result).length === 0){                       //if No return record found
+                res.send(`No record found or Category id.${categoryid} does not exist`);
+            }else{
+                //res.send(JSON.stringify(result))
+                //res.send(`{"Products":${JSON.stringify(result)}}`);        //if exist return response in json                
+                res.send(JSON.stringify(result)); 
+            }         
+        }
+    });
+});
+
 
 //POST -end point to insert a record of user
 app.post('/category', function(req,res){
     
-    var name = req.body.name;                                               //retrieve user info pass from req.body
-    var description = req.body.description;    
+    var cname = req.body.name;                                               //retrieve user info pass from req.body
+    var cdescription = req.body.description;    
 
-    categoryDB.insertCategory(name,description,function(err,result){        //insert record via model
+    categoryDB.insertCategory(cname,cdescription,function(err,result){        //insert record via model
         if (err){                                                           //if error
             res.status(500);                                                //return err response code
             res.send(`{"message":"${err}"}`);                               //return response err message in json
@@ -156,14 +198,14 @@ app.post('/category', function(req,res){
 });
 
 
-//PUT - Update category record by id
+//PUT - end point to Update category record by id
 app.put('/category/:categoryid', function(req,res){
 
     var categoryid = req.params.categoryid;                                          //retrieve id pass in as params from req URI
-    var name = req.body.name;                                                        //retrieve name pass from req.body
-    var description = req.body.description;                                          //retrieve description pass from req.body
+    var cname = req.body.name;                                                        //retrieve name pass from req.body
+    var cdescription = req.body.description;                                          //retrieve description pass from req.body
 
-    categoryDB.updateCategory(name,description,categoryid,function(err,result){      //update record using user.js model
+    categoryDB.updateCategory(cname,cdescription,categoryid,function(err,result){      //update record using user.js model
         if (err){                                                                    //if error
             res.status(500);                                                         //return err response code
             res.send(`{"message":${err}}`);                                          //return response err message in json
@@ -180,7 +222,7 @@ app.put('/category/:categoryid', function(req,res){
 });
 
 
-//Delete category record by id
+//Delete - end point to del category record by id
 app.delete('/category/:categoryid', function(req,res){
 
     var categoryid = req.params.categoryid;                                         //retrieve id pass in as params from req URI
@@ -211,7 +253,7 @@ app.get('/product', function(req,res){                                //get db r
             res.send(`{"message":"${err}"}`);                       //return response err message in json
         } else {                                                    //if success, display result
             res.status(200);                                        //return success response code
-            res.send(`{"Users":${JSON.stringify(result)}}`);        //return response in json
+            res.send(`{"Products":${JSON.stringify(result)}}`);        //return response in json
         }
     });
 });
@@ -228,7 +270,7 @@ app.get('/product/:productid', function(req,res){
         } else {                                                    //if success
             res.status(200);                                        //return success response code
             if(Object.keys(result).length === 0){                   //if record not found, return err in json
-                res.send(`{"message":"Error - user record id.${productid} not found"}`);    
+                res.send(`{"message":"Error - record id.${productid} not found"}`);    
             }else{
                 res.send(result[0]);                                //return single record found in json
             }
@@ -236,7 +278,33 @@ app.get('/product/:productid', function(req,res){
     });
 });
 
-//POST -end point to insert a record of user
+
+//GET - WS end point to retrieve record of a user by id
+app.get('/search', function(req,res){
+
+    var q = req.query.q;                                            //retrieve string pass in as query from req URI
+    //res.status(200);
+    if (q != null){
+        //res.send("search this : " + q);
+        productDB.searchProduct(q,function(err,result){                     //get record from user.js model
+            if (err){                                                   //if error
+                res.status(500);                                        //return err response code
+                res.send(`{"message":"${err}"}`);                       //return response err message in json
+            } else {                                                    //if success
+                res.status(200);                                        //return success response code
+                if(Object.keys(result).length === 0){                   //if record not found, return err in json
+                    res.send("No record found -" + q);    
+                }else{
+                    res.send(JSON.stringify(result));                                //return single record found in json
+                }
+            }
+        });
+    }
+ 
+});
+
+
+//POST -end point to insert a new record of product
 app.post('/product', function(req,res){
     
     var name = req.body.name;                                               //retrieve product info pass from req.body
@@ -257,5 +325,52 @@ app.post('/product', function(req,res){
     });
 });
 
+
+//PUT - endpoint to Update product by id
+app.put('/product/:productid', function(req,res){
+
+    var productid = req.params.productid;                                       //retrieve id pass in as params from req URI
+    var name = req.body.name;                                                   //retrieve info pass from req.body
+    var description = req.body.description;
+    var price = req.body.price;
+    var imageurl = req.body.imageurl;
+    var categoryid = req.body.categoryid;
+    
+    productDB.updateProduct(name,description,price,imageurl,categoryid,productid,function(err,result){      //update record using user.js model
+        if (err){                                                               //if error
+            res.status(500);                                                    //return err response code
+            res.send(`{"message":${err}}`);                                     //return response err message in json
+        } else {                                                                //if success
+            res.status(200);                                                    //return success response code
+            //res.send(result);  
+            if (result.affectedRows === 1){                                     //if record found
+                res.send(`{"updatedId":${productid}}`);   
+            }else {
+                res.send(`{"message":"Error - record id.${productid} not found"}`); 
+            }  
+        }
+    });
+});
+
+
+//Delete - endpoint to del product by id
+app.delete('/product/:productid', function(req,res){
+
+    var productid = req.params.productid;                                            //retrieve id pass in as params from req URI
+    
+    productDB.deleteProduct(productid,function(err,result){                          //get record from user.js model
+        if (err){                                                                    //if error
+            res.status(500);                                                         //return err response code
+            res.send(`{"message":"${err}"}`);                                        //return response err message in json
+        } else {
+            res.status(200);                                                         //return status ok
+            if (result.affectedRows){                                                //if deleted return resp in json format 
+                res.send(`{"deleted id":${productid}}`);   
+            }else{                                                          //if no del, resp in json format 
+                res.send(`{"message":"Error - record id.${productid} not found"}`); 
+             }                                                    
+        }
+    });
+});
 
 module.exports = app;               

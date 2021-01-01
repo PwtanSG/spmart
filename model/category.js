@@ -6,7 +6,7 @@ var db = require('./databaseConfig')                                        //dB
 var categoryDB = {                                                          //async function with callback
 
     //Retreive records in Category table 
-    getCategory: function (callback) {
+    getCategories: function (callback) {
         var dbConn = db.getConnection();
         dbConn.connect(function (err) {
             if (err) {                                                      //if DB connection Error
@@ -24,16 +24,35 @@ var categoryDB = {                                                          //as
         });
     },
 
+    //Retrieve record of a category by id
+    getCategory: function (categoryid, callback) {
+        var dbConn = db.getConnection();
+        dbConn.connect(function (err) {
+            if (err) {                                               //if DB connection Error
+                return callback(err, null)                           //return error, null result
+            } else {                                                  //if DB connection Successful
+                var sql = "SELECT * FROM category WHERE categoryid=?";      //SQL query parameter statement to prevent SQLI
+                dbConn.query(sql, [categoryid], function (err, results) {    //execute DB query 
+                    dbConn.end();                                   //release/close DB connection
+                    if (err) {                                       //if DB query error    
+                        console.log(err)                            //log query error
+                    }
+                    return callback(err, results)                    //return callback of DB query, either err or result     
+                });
+            }
+        });
+    },
+
     //Insert a new record into category
-    insertCategory: function (name, description, callback) {
+    insertCategory: function (cname, cdescription, callback) {
         var dbConn = db.getConnection();
         dbConn.connect(function (err) {
             if (err) {                                                               //if DB connection Error
                 return callback(err, null)                                           //return error, null result
             } else {                                                                 //if DB connection Successful
-                var sql = `INSERT INTO category (name,description) 
+                var sql = `INSERT INTO category (cname,cdescription) 
                                 VALUES(?,?)`;                                        //SQL query parameter statement to prevent SQLI
-                dbConn.query(sql, [name, description], function (err, results) {     //execute DB query 
+                dbConn.query(sql, [cname, cdescription], function (err, results) {     //execute DB query 
                     dbConn.end();                                                    //release/close DB connection
                     if (err) {                                                       //if DB query error    
                         console.log(err)                                             //log query error
@@ -45,14 +64,14 @@ var categoryDB = {                                                          //as
     },
 
     //Update an existing user record by id
-    updateCategory: function (name, description, categoryid, callback) {
+    updateCategory: function (cname, cdescription, categoryid, callback) {
         var dbConn = db.getConnection();
         dbConn.connect(function (err) {
             if (err) {                                                                        //if DB connection Error
                 return callback(err, null)                                                    //return error, null result
             } else {                                                                          //if DB connection Successful
-                var sql = "UPDATE category SET name=?, description=? WHERE categoryid = ?";                                                       //SQL query parameter statement to prevent SQLI
-                dbConn.query(sql, [name,description,categoryid], function (err, results) {    //execute DB query 
+                var sql = "UPDATE category SET cname=?, cdescription=? WHERE categoryid = ?";                                                       //SQL query parameter statement to prevent SQLI
+                dbConn.query(sql, [cname, cdescription, categoryid], function (err, results) {    //execute DB query 
                     dbConn.end();                                                             //release/close DB connection
                     if (err) {                                                                //if DB query error    
                         console.log(err)                                                      //log query error
@@ -64,19 +83,19 @@ var categoryDB = {                                                          //as
     },
 
     //delete a category record by id
-    deleteCategory:function(category,callback){
+    deleteCategory: function (categoryid, callback) {
         var dbConn = db.getConnection();
-        dbConn.connect(function(err){
-            if (err){                                                       //if DB connection Error
-                return callback(err,null)                                   //return error, null result
-            }else{                                                          //if DB connection Successful
+        dbConn.connect(function (err) {
+            if (err) {                                                       //if DB connection Error
+                return callback(err, null)                                   //return error, null result
+            } else {                                                          //if DB connection Successful
                 var sql = "DELETE FROM category WHERE categoryid=?";        //SQL query parameter statement to prevent SQLI
-                dbConn.query(sql,[category],function(err,results){          //execute DB query 
+                dbConn.query(sql, [categoryid], function (err, results) {          //execute DB query 
                     dbConn.end();                                           //release/close DB connection
-                    if (err){                                               //if DB query error    
+                    if (err) {                                               //if DB query error    
                         console.log(err)                                    //log query error
                     }
-                    return callback(err,results)                            //return callback of DB query, either err or result     
+                    return callback(err, results)                            //return callback of DB query, either err or result     
                 });
             }
         });
