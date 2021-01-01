@@ -120,6 +120,27 @@ app.delete('/user/:userid', function(req,res){
     });
 });
 
+//end point to login
+app.post('/user/login',function(req,res){
+
+    var email=req.body.email;
+    var password=req.body.password;
+
+    userDB.loginUser(email,password,function(err,result){
+
+        if(err){
+            res.status(500).send(`{"message":"Error!"}`);
+        }else{
+            if(result==null){
+                res.status(200).send(`{"message":"Login Failed"}`);
+            }else{
+                res.status(200).send(`{"JWT":"${result}"}`);
+                //res.status(200).send(result);
+            }
+        }
+    })
+});
+
 
 
 //GET - end point to get DB records of all categories

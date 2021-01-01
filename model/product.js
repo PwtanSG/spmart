@@ -77,7 +77,7 @@ var productDB = {                                                          //asy
             } else {                                                  //if DB connection Successful
                 var sql = "SELECT c.categoryid, c.cname category,p.categoryid, p.name,p.description products FROM category c INNER JOIN products p USING(categoryid) WHERE (p.description LIKE ?) OR (c.cname LIKE ?)";
                 //var sql = `SELECT c.categoryid, c.cname category,p.categoryid, p.name,p.description products FROM category c INNER JOIN products p USING(categoryid) WHERE (p.description LIKE ${qString}) OR (c.cname LIKE ${qString})`;
-                dbConn.query(sql,["%"+queryString+"%","%"+queryString+"%"],function (err, results) {    //execute DB query 
+                dbConn.query(sql, ["%" + queryString + "%", "%" + queryString + "%"], function (err, results) {    //execute DB query 
                     dbConn.end();                                   //release/close DB connection
                     if (err) {                                       //if DB query error    
                         console.log(err)                            //log query error
@@ -147,7 +147,6 @@ var productDB = {                                                          //asy
             }
         });
     }
-
 }
 
 module.exports = productDB;                                                 //export for use in app
