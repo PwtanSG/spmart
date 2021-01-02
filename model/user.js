@@ -3,6 +3,7 @@
 var db = require('./databaseConfig');                    //dB connection
 var secret = require('../config');                       //load secret key
 var jwt = require('jsonwebtoken');                       //import jwt
+var bcrypt = require('bcryptjs');                         //bcrypjs for hashing pw
 
 var userDB = {
 
@@ -50,16 +51,24 @@ var userDB = {
         dbConn.connect(function (err) {
             if (err) {                                                                       //if DB connection Error
                 return callback(err, null)                                                   //return error, null result
-            } else {                                                                          //if DB connection Successful
-                var sql = `INSERT INTO user (username,email,role,password) 
-                            VALUES(?,?,?,?)`;                                              //SQL query parameter statement to prevent SQLI
-                dbConn.query(sql, [username, email, role, password], function (err, results) {     //execute DB query 
-                    dbConn.end();                                                          //release/close DB connection
-                    if (err) {                                                              //if DB query error    
-                        console.log(err)                                                   //log query error
+            } else {                                                                        //if DB connection Successful
+                bcrypt.hash(password, 10, function (err, hash) {                            // 10 digit hash
+
+                    password = hash;
+                    if (err) {
+                        return callback(err, null);
                     }
-                    return callback(err, results)                                           //return callback of DB query, either err or result     
+                    var sql = `INSERT INTO user (username,email,role,password) 
+                    VALUES(?,?,?,?)`;                                                           //SQL query parameter statement to prevent SQLI
+                    dbConn.query(sql, [username, email, role, password], function (err, results) {     //execute DB query 
+                        dbConn.end();                                                          //release/close DB connection
+                        if (err) {                                                              //if DB query error    
+                            console.log(err)                                                   //log query error
+                        }
+                        return callback(err, results)                                           //return callback of DB query, either err or result     
+                    });
                 });
+
             }
         });
     },
@@ -110,7 +119,7 @@ var userDB = {
             if (err) {//connecting to d/b encounter some error
                 return callback(err, null);
             } else {
-                var sql = "select * from user where email=? and password=?";
+                var sql = "select * from user where email=?";
 
                 dbConn.query(sql, [email, password], function (err, result) {
 
@@ -120,11 +129,18 @@ var userDB = {
                         return callback(err, null);
                     } else { //login match
                         if (result.length == 1) {//Success loing found a matching record
-                            //issue you a json web token = jwt payload - secret key - expires    
-                            var token = jwt.sign({ userid:result[0].userid,username: result[0].username, role: result[0].role, email: result[0].email }, secret.key, { expiresIn: 3600 });
-                            return callback(null, token);
-                            //return callback(null, result);
-                        } else { //login no match
+                            var hashPwd = result[0].password;   //load hash password dB 
+                            // compare password(user input) with hash pwd in dB
+                            bcrypt.compare(password, hashPwd, function (err, success) {
+                                if (err || !success) {              //err or fail when decrypt hash
+                                    return callback(err, null);
+                                } else {
+                                    //password issue you a json web token = jwt payload - secret key - expires    
+                                    var token = jwt.sign({ userid: result[0].userid, username: result[0].username, role: result[0].role, email: result[0].email }, secret.key, { expiresIn: 14400 });
+                                    return callback(null, token);
+                                }
+                            });
+                        } else { //login password not match records
                             return callback(null, null);
                         }
                     }

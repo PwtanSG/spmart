@@ -46,12 +46,16 @@ var authLibrary = {
     verifyAdminOrUserId: function (req, res, next) {
         var userid = req.params.userid;     
         //console.log("userid:" + userid);
-        if ((req.role == "admin") || (req.userid == userid)) {
-            console.log(req)
+        if (req.role == "admin") {
+            console.log(req.username + " " + req.role)
             next();
-        }
-        else {
-            res.status(401).send(`{"Message":"Not Authorized"}`);
+        }else {
+            if ((req.role == "user") && (req.userid == userid)){
+                console.log(req.username + " " + req.role)
+                next();
+            }else{
+                res.status(401).send(`{"Message":"Not Authorized"}`);
+            } 
         }
     }
 }

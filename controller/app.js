@@ -11,10 +11,20 @@
 
  //import token verification library
  const authLibrary = require('../auth/verifyToken');
+
+ //import validator library
+ const validateLibrary = require('../validate/validateLib')
  
+ //import cross origin policy lib
+ var cors= require('cors');
+
  //create an express app instance
  var app=express();
  
+ //enable cors for all origins:
+ app.options('*', cors()); 
+ app.use(cors());
+
  //---------------  apply middleware ------------------------------
 
  //pre-processing of data passing in from request
@@ -41,7 +51,7 @@ app.get('/user',authLibrary.verifyToken, authLibrary.verifyAdmin, function(req,r
 });
 
 //GET -  (Only Admin for all id. For member ONLY his own Id ) end point to retrieve record of a user by id
-app.get('/user/:userid',authLibrary.verifyToken, authLibrary.verifyAdminOrUserId, function(req,res){
+app.get('/user/:userid', authLibrary.verifyToken, authLibrary.verifyAdminOrUserId, function(req,res){
 
     var userid = req.params.userid;                                 //retrieve id pass in as params from req URI
     
@@ -61,7 +71,7 @@ app.get('/user/:userid',authLibrary.verifyToken, authLibrary.verifyAdminOrUserId
 });
 
 //POST -end point to insert a record of user
-app.post('/user', function(req,res){
+app.post('/user', validateLibrary.validateUserRegistration, function(req,res){
     
     var username = req.body.username;                                       //retrieve user info pass from req.body
     var email = req.body.email;    
@@ -81,7 +91,7 @@ app.post('/user', function(req,res){
 });
 
 //PUT - endpoint to Update user record by id
-app.put('/user/:userid', function(req,res){
+app.put('/user/:userid',authLibrary.verifyToken, authLibrary.verifyAdmin, function(req,res){
 
     var userid = req.params.userid;                                             //retrieve id pass in as params from req URI
     var email = req.body.email;                                                 //retrieve user info pass from req.body
@@ -97,7 +107,7 @@ app.put('/user/:userid', function(req,res){
             if (result.affectedRows === 1){                                     //if record found
                 res.send(`{"updatedId":${userid}}`);   
             }else {
-                res.send(`{"message":"Error - user record id.${userid} not found"}`); 
+                res.send(`{"message": user record id.${userid} not found"}`); 
             }  
         }
     });
