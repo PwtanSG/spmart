@@ -67,22 +67,28 @@ var productDB = {                                                          //asy
     },
 
 
-    //Retrieve record of a product by id
+    //Retrieve products based on substring of DESCRIPTION OR CATEGORY, SORT by price asc
     searchProduct: function (queryString, callback) {
-        //var qString = CONCAT("%", "?" , "%");
+        //inner left join category and product table w fk, and search for user's queryString in col category's name col product description
         var dbConn = db.getConnection();
+        console.log("!searchProduct! " + queryString)
         dbConn.connect(function (err) {
             if (err) {                                               //if DB connection Error
                 return callback(err, null)                           //return error, null result
             } else {                                                  //if DB connection Successful
-                var sql = "SELECT c.categoryid, c.cname category,p.categoryid, p.name,p.description products FROM category c INNER JOIN products p USING(categoryid) WHERE (p.description LIKE ?) OR (c.cname LIKE ?)";
-                //var sql = `SELECT c.categoryid, c.cname category,p.categoryid, p.name,p.description products FROM category c INNER JOIN products p USING(categoryid) WHERE (p.description LIKE ${qString}) OR (c.cname LIKE ${qString})`;
+                var sql = 
+                    `SELECT c.categoryid, c.cname,p.categoryid, p.name,p.description,p.price,p.imageurl 
+                    FROM category c 
+                    INNER JOIN products p USING(categoryid) 
+                    WHERE (p.description LIKE ?) OR (c.cname LIKE ?) 
+                    ORDER BY p.price ASC`;
+    
                 dbConn.query(sql, ["%" + queryString + "%", "%" + queryString + "%"], function (err, results) {    //execute DB query 
                     dbConn.end();                                   //release/close DB connection
                     if (err) {                                       //if DB query error    
                         console.log(err)                            //log query error
                     }
-                    return callback(err, results)                    //return callback of DB query, either err or result     
+                    return callback(err, results)                   //return callback of DB query, either err or result     
                 });
             }
         });

@@ -8,6 +8,9 @@
  const userDB = require('../model/user');
  const categoryDB = require('../model/category');
  const productDB = require('../model/product');
+
+ //import token verification library
+ const authLibrary = require('../auth/verifyToken');
  
  //create an express app instance
  var app=express();
@@ -23,8 +26,8 @@
 
 // Defining Webservices endpoint (VERB+URL) 
 
-//GET - end point to retrieve records of all users
-app.get('/user', function(req,res){                                //get db record through user.js model
+//GET - (Admin ONLY) end point to retrieve records of all users
+app.get('/user',authLibrary.verifyToken, authLibrary.verifyAdmin, function(req,res){                                //get db record through user.js model
 
     userDB.getUsers(function(err,result){
         if (err){                                                   //if error 
@@ -37,8 +40,8 @@ app.get('/user', function(req,res){                                //get db reco
     });
 });
 
-//GET -  end point to retrieve record of a user by id
-app.get('/user/:userid', function(req,res){
+//GET -  (Only Admin for all id. For member ONLY his own Id ) end point to retrieve record of a user by id
+app.get('/user/:userid',authLibrary.verifyToken, authLibrary.verifyAdminOrUserId, function(req,res){
 
     var userid = req.params.userid;                                 //retrieve id pass in as params from req URI
     
@@ -100,8 +103,8 @@ app.put('/user/:userid', function(req,res){
     });
 });
 
-//Delete - end point to del user record by id
-app.delete('/user/:userid', function(req,res){
+//Delete - (Admin ONLY) end point to del user record by id
+app.delete('/user/:userid',authLibrary.verifyToken, authLibrary.verifyAdmin, function(req,res){
 
     var userid = req.params.userid;                                         //retrieve id pass in as params from req URI
     
@@ -177,7 +180,7 @@ app.get('/category/:categoryid', function(req,res){
     });
 });
 
-//GET- WS endpoint to retrieve data of all products belonging to a category id <num>
+//GET- endpoint to retrieve data of all products belonging to a category id <num>
 app.get('/category/:categoryid/product', function(req,res){                 
 
     var categoryid = req.params.categoryid;                                           //retrieve catid pass in as params from req URI
@@ -200,8 +203,8 @@ app.get('/category/:categoryid/product', function(req,res){
 });
 
 
-//POST -end point to insert a record of user
-app.post('/category', function(req,res){
+//POST - (Admin ONLY) end point to insert a record of user
+app.post('/category', authLibrary.verifyToken, authLibrary.verifyAdmin, function(req,res){
     
     var cname = req.body.name;                                               //retrieve user info pass from req.body
     var cdescription = req.body.description;    
@@ -219,8 +222,8 @@ app.post('/category', function(req,res){
 });
 
 
-//PUT - end point to Update category record by id
-app.put('/category/:categoryid', function(req,res){
+//PUT - (Admin ONLY) end point to Update category record by id
+app.put('/category/:categoryid', authLibrary.verifyToken, authLibrary.verifyAdmin, function(req,res){
 
     var categoryid = req.params.categoryid;                                          //retrieve id pass in as params from req URI
     var cname = req.body.name;                                                        //retrieve name pass from req.body
@@ -243,8 +246,8 @@ app.put('/category/:categoryid', function(req,res){
 });
 
 
-//Delete - end point to del category record by id
-app.delete('/category/:categoryid', function(req,res){
+//Delete - (Admin ONLY) end point to del category record by id
+app.delete('/category/:categoryid', authLibrary.verifyToken, authLibrary.verifyAdmin, function(req,res){
 
     var categoryid = req.params.categoryid;                                         //retrieve id pass in as params from req URI
     
@@ -279,6 +282,33 @@ app.get('/product', function(req,res){                                //get db r
     });
 });
 
+
+
+//GET - WS end point to retrieve record of a user by id
+//app.get('/search', function(req,res){
+app.get('/product/search', function(req,res){
+
+    var q = req.query.q;                                                //retrieve string pass in as '?' query from req URI
+    //res.status(200);
+    if (q != null){
+        //res.send("search this : " + q);
+        productDB.searchProduct(q,function(err,result){                 //get record from user.js model
+            if (err){                                                   //if error
+                res.status(500);                                        //return err response code
+                res.send(`{"message":"${err}"}`);                       //return response err message in json
+            } else {                                                    //if success
+                res.status(200);                                        //return success response code
+                if(Object.keys(result).length === 0){                   //if record not found, return err in json
+                    res.send("No record found -" + q);    
+                }else{
+                    res.send(JSON.stringify(result));                                //return single record found in json
+                }
+            }
+        });
+    }
+ 
+});
+
 //GET - WS end point to retrieve record of a user by id
 app.get('/product/:productid', function(req,res){
 
@@ -300,33 +330,8 @@ app.get('/product/:productid', function(req,res){
 });
 
 
-//GET - WS end point to retrieve record of a user by id
-app.get('/search', function(req,res){
-
-    var q = req.query.q;                                            //retrieve string pass in as query from req URI
-    //res.status(200);
-    if (q != null){
-        //res.send("search this : " + q);
-        productDB.searchProduct(q,function(err,result){                     //get record from user.js model
-            if (err){                                                   //if error
-                res.status(500);                                        //return err response code
-                res.send(`{"message":"${err}"}`);                       //return response err message in json
-            } else {                                                    //if success
-                res.status(200);                                        //return success response code
-                if(Object.keys(result).length === 0){                   //if record not found, return err in json
-                    res.send("No record found -" + q);    
-                }else{
-                    res.send(JSON.stringify(result));                                //return single record found in json
-                }
-            }
-        });
-    }
- 
-});
-
-
-//POST -end point to insert a new record of product
-app.post('/product', function(req,res){
+//POST - (Admin ONLY) end point to insert a new record of product
+app.post('/product', authLibrary.verifyToken, authLibrary.verifyAdmin, function(req,res){
     
     var name = req.body.name;                                               //retrieve product info pass from req.body
     var description = req.body.description;    
@@ -347,8 +352,8 @@ app.post('/product', function(req,res){
 });
 
 
-//PUT - endpoint to Update product by id
-app.put('/product/:productid', function(req,res){
+//PUT - (Admin ONLY) endpoint to Update product by id
+app.put('/product/:productid',authLibrary.verifyToken, authLibrary.verifyAdmin, function(req,res){
 
     var productid = req.params.productid;                                       //retrieve id pass in as params from req URI
     var name = req.body.name;                                                   //retrieve info pass from req.body
@@ -374,8 +379,8 @@ app.put('/product/:productid', function(req,res){
 });
 
 
-//Delete - endpoint to del product by id
-app.delete('/product/:productid', function(req,res){
+//Delete - (Admin ONLY) endpoint to del product by id
+app.delete('/product/:productid', authLibrary.verifyToken, authLibrary.verifyAdmin, function(req,res){
 
     var productid = req.params.productid;                                            //retrieve id pass in as params from req URI
     

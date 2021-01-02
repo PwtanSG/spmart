@@ -121,7 +121,7 @@ var userDB = {
                     } else { //login match
                         if (result.length == 1) {//Success loing found a matching record
                             //issue you a json web token = jwt payload - secret key - expires    
-                            var token = jwt.sign({ username: result[0].username, role: result[0].role, email: result[0].email }, secret.key, { expiresIn: 3600 });
+                            var token = jwt.sign({ userid:result[0].userid,username: result[0].username, role: result[0].role, email: result[0].email }, secret.key, { expiresIn: 3600 });
                             return callback(null, token);
                             //return callback(null, result);
                         } else { //login no match
