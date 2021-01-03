@@ -112,7 +112,6 @@ var productDB = {                                                          //asy
                     if (err) {                                                                  //if DB query error    
                         console.log(err)                                                        //log query error
                     } else {// if no error productlog history
-                        //console.log("result" + results.insertId);
                         var sql1 = `INSERT INTO productlog (productid,name, description, price, imageurl, categoryid,updatedby) 
                         VALUES(?,?,?,?,?,?,?)`;                                                 //SQL query parameter statement to prevent SQLI
                         dbConn.query(sql1, [results.insertId, name, description, price, imageurl, categoryid, createdby], function (err, result1) {     //execute DB query 
@@ -179,8 +178,6 @@ var productDB = {                                                          //asy
                     if (err) {                                              //if DB query error    
                         console.log(err)                                    //log query error
                     }else { //delete successful log history 
-                        console.log("result1")
-                        console.log(resultx)
                         var sql2 = `INSERT INTO productlog (productid,name, description, price, imageurl, categoryid,updatedby) 
                         VALUES(?,?,?,?,?,?,?)`;                                                 //SQL query parameter statement to prevent SQLI
                         dbConn.query(sql2, [resultx.productid, resultx.name, resultx.description, resultx.price, resultx.imageurl, resultx.categoryid, deletedby], function (err, result2) {     //execute DB query 

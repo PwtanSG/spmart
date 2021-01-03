@@ -18,6 +18,20 @@
  //import cross origin policy lib
  var cors= require('cors');
 
+//import multer for upload image
+var multer  = require('multer')
+//define upload product image's server location and filename
+var storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+      //cb(null, './upload')
+      cb(null, './public/images')
+    },
+    filename: function (req, file, cb) {
+      cb(null, file.originalname)
+    }
+})
+var upload = multer({ storage: storage })
+
  //create an express app instance
  var app=express();
  
@@ -32,8 +46,7 @@
  app.use(urlencodedParser);                                         //attach body-parser middleware
  app.use(bodyParser.json());                                        //parse json & looks at requests Json Content-Type
 
-
-
+ 
 // Defining Webservices endpoint (VERB+URL) 
 
 //GET - (Admin ONLY) end point to retrieve records of all users
@@ -91,7 +104,7 @@ app.post('/user', validateLibrary.validateUserRegistration, function(req,res){
 });
 
 //PUT - endpoint to Update user record by id
-app.put('/user/:userid',authLibrary.verifyToken, authLibrary.verifyAdmin, function(req,res){
+app.put('/user/:userid',authLibrary.verifyToken, authLibrary.verifyAdminOrUserId, function(req,res){
 
     var userid = req.params.userid;                                             //retrieve id pass in as params from req URI
     var email = req.body.email;                                                 //retrieve user info pass from req.body
@@ -279,18 +292,19 @@ app.delete('/category/:categoryid', authLibrary.verifyToken, authLibrary.verifyA
 
 
 //GET - end point to retrieve records of all products
-app.get('/product', function(req,res){                                //get db record through user.js model
+app.get('/product', function(req,res){                                  //get db record through user.js model
 
     productDB.getProducts(function(err,result){
-        if (err){                                                   //if error 
-            res.status(500);                                        //return err response code
-            res.send(`{"message":"${err}"}`);                       //return response err message in json
-        } else {                                                    //if success, display result
-            res.status(200);                                        //return success response code
-            res.send(`{"Products":${JSON.stringify(result)}}`);        //return response in json
+        if (err){                                                       //if error 
+            res.status(500);                                            //return err response code
+            res.send(`{"message":"${err}"}`);                           //return response err message in json
+        } else {                                                        //if success, display result
+            res.status(200);                                            //return success response code
+            res.send(`{"Products":${JSON.stringify(result)}}`);         //return response in json
         }
     });
 });
+
 
 //GET - (Admin ONLY )end point to retrieve records of productlog history
 app.get('/product/productlog', authLibrary.verifyToken, authLibrary.verifyAdmin, function(req,res){                                //get db record through user.js model
@@ -311,20 +325,20 @@ app.get('/product/productlog', authLibrary.verifyToken, authLibrary.verifyAdmin,
 //app.get('/search', function(req,res){
 app.get('/product/search', function(req,res){
 
-    var q = req.query.q;                                                //retrieve string pass in as '?' query from req URI
+    var q = req.query.q;                                                    //retrieve string pass in as '?' query from req URI
     //res.status(200);
     if (q != null){
         //res.send("search this : " + q);
-        productDB.searchProduct(q,function(err,result){                 //get record from user.js model
-            if (err){                                                   //if error
-                res.status(500);                                        //return err response code
-                res.send(`{"message":"${err}"}`);                       //return response err message in json
-            } else {                                                    //if success
-                res.status(200);                                        //return success response code
-                if(Object.keys(result).length === 0){                   //if record not found, return err in json
+        productDB.searchProduct(q,function(err,result){                     //get record from user.js model
+            if (err){                                                       //if error
+                res.status(500);                                            //return err response code
+                res.send(`{"message":"${err}"}`);                           //return response err message in json
+            } else {                                                        //if success
+                res.status(200);                                            //return success response code
+                if(Object.keys(result).length === 0){                       //if record not found, return err in json
                     res.send("No record found -" + q);    
                 }else{
-                    res.send(JSON.stringify(result));                                //return single record found in json
+                    res.send(JSON.stringify(result));                       //return single record found in json
                 }
             }
         });
@@ -335,23 +349,34 @@ app.get('/product/search', function(req,res){
 //GET - end point to retrieve record of a product by id
 app.get('/product/:productid', function(req,res){
 
-    var productid = req.params.productid;                                 //retrieve id pass in as params from req URI
+    var productid = req.params.productid;                                   //retrieve id pass in as params from req URI
     
-    productDB.getProduct(productid,function(err,result){                     //get record from user.js model
-        if (err){                                                   //if error
-            res.status(500);                                        //return err response code
-            res.send(`{"message":"${err}"}`);                       //return response err message in json
-        } else {                                                    //if success
-            res.status(200);                                        //return success response code
-            if(Object.keys(result).length === 0){                   //if record not found, return err in json
+    productDB.getProduct(productid,function(err,result){                    //get record from user.js model
+        if (err){                                                           //if error
+            res.status(500);                                                //return err response code
+            res.send(`{"message":"${err}"}`);                               //return response err message in json
+        } else {                                                            //if success
+            res.status(200);                                                //return success response code
+            if(Object.keys(result).length === 0){                           //if record not found, return err in json
                 res.send(`{"message":"Error - record id.${productid} not found"}`);    
             }else{
-                res.send(result[0]);                                //return single record found in json
+                res.send(result[0]);                                        //return single record found in json
             }
         }
     });
 });
 
+//Upload route
+app.post('/product/upload', upload.single('image'), (req, res) => {
+    console.log("uploading")
+    try {
+        return res.status(201).json({
+            message: 'File uploded successfully'
+        });
+    } catch (error) {
+        console.error(error);
+    }
+});
 
 //POST - (Admin ONLY) end point to insert a new record of product
 app.post('/product', authLibrary.verifyToken, authLibrary.verifyAdmin, function(req,res){
@@ -418,11 +443,13 @@ app.delete('/product/:productid', authLibrary.verifyToken, authLibrary.verifyAdm
             res.status(200);                                                         //return status ok
             if (result.affectedRows){                                                //if deleted return resp in json format 
                 res.send(`{"deleted id":${productid}}`);   
-            }else{                                                          //if no del, resp in json format 
+            }else{                                                                   //if no del, resp in json format 
                 res.send(`{"message":"Error - record id.${productid} not found"}`); 
              }                                                    
         }
     });
 });
+
+
 
 module.exports = app;               
