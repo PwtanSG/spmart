@@ -52,7 +52,7 @@ var userDB = {
             if (err) {                                                                       //if DB connection Error
                 return callback(err, null)                                                   //return error, null result
             } else {                                                                        //if DB connection Successful
-                bcrypt.hash(password, 10, function (err, hash) {                            // 10 digit hash
+                bcrypt.hash(password, 10, function (err, hash) {                            // 10 digit hash the original password
 
                     password = hash;
                     if (err) {
@@ -80,13 +80,22 @@ var userDB = {
             if (err) {                                                                       //if DB connection Error
                 return callback(err, null)                                                   //return error, null result
             } else {                                                                          //if DB connection Successful
-                var sql = "UPDATE user SET email=? , password=? WHERE userid = ?";                                                       //SQL query parameter statement to prevent SQLI
-                dbConn.query(sql, [email, password, userid], function (err, results) {             //execute DB query 
-                    dbConn.end();                                                          //release/close DB connection
-                    if (err) {                                                              //if DB query error    
-                        console.log(err)                                                   //log query error
+                bcrypt.hash(password, 10, function (err, hash) {                             // 10 digit hash the password user entered
+                    
+                    password = hash;
+                    if (err) {
+                        return callback(err, null);
                     }
-                    return callback(err, results)                                           //return callback of DB query, either err or result     
+
+                    var sql = "UPDATE user SET email=? , password=? WHERE userid = ?";          //SQL query parameter statement to prevent SQLI
+                    dbConn.query(sql, [email, password, userid], function (err, results) {      //execute DB query 
+                        dbConn.end();                                                           //release/close DB connection
+                        if (err) {                                                              //if DB query error    
+                            console.log(err)                                                    //log query error
+                        }
+                        return callback(err, results)                                           //return callback of DB query, either err or result     
+                    });
+
                 });
             }
         });

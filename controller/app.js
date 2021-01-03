@@ -292,9 +292,22 @@ app.get('/product', function(req,res){                                //get db r
     });
 });
 
+//GET - (Admin ONLY )end point to retrieve records of productlog history
+app.get('/product/productlog', authLibrary.verifyToken, authLibrary.verifyAdmin, function(req,res){                                //get db record through user.js model
+
+    productDB.getProductLog(function(err,result){
+        if (err){                                                   //if error 
+            res.status(500);                                        //return err response code
+            res.send(`{"message":"${err}"}`);                       //return response err message in json
+        } else {                                                    //if success, display result
+            res.status(200);                                        //return success response code
+            res.send(`{"Logs":${JSON.stringify(result)}}`);        //return response in json
+        }
+    });
+});
 
 
-//GET - WS end point to retrieve record of a user by id
+//GET - end point to retrieve record of a user by id
 //app.get('/search', function(req,res){
 app.get('/product/search', function(req,res){
 
@@ -319,7 +332,7 @@ app.get('/product/search', function(req,res){
  
 });
 
-//GET - WS end point to retrieve record of a user by id
+//GET - end point to retrieve record of a product by id
 app.get('/product/:productid', function(req,res){
 
     var productid = req.params.productid;                                 //retrieve id pass in as params from req URI
@@ -347,9 +360,10 @@ app.post('/product', authLibrary.verifyToken, authLibrary.verifyAdmin, function(
     var description = req.body.description;    
     var price = req.body.price;    
     var imageurl = req.body.imageurl; 
-    var categoryid = req.body.categoryid;     
+    var categoryid = req.body.categoryid;
+    var createdby = "Created by " + req.username;                           //for productlog history who created
 
-    productDB.insertProduct(name,description,price,imageurl,categoryid,function(err,result){    //insert record using user.js model
+    productDB.insertProduct(name,description,price,imageurl,categoryid,createdby,function(err,result){    //insert record using user.js model
         if (err){                                                           //if error
             res.status(500);                                                //return err response code
             res.send(`{"message":"${err}"}`);                               //return response err message in json
@@ -371,8 +385,9 @@ app.put('/product/:productid',authLibrary.verifyToken, authLibrary.verifyAdmin, 
     var price = req.body.price;
     var imageurl = req.body.imageurl;
     var categoryid = req.body.categoryid;
+    var updatedby = "Updated by " + req.username;                               //for productlog hist who updated
     
-    productDB.updateProduct(name,description,price,imageurl,categoryid,productid,function(err,result){      //update record using user.js model
+    productDB.updateProduct(name,description,price,imageurl,categoryid,productid,updatedby,function(err,result){      //update record using user.js model
         if (err){                                                               //if error
             res.status(500);                                                    //return err response code
             res.send(`{"message":${err}}`);                                     //return response err message in json
@@ -393,8 +408,9 @@ app.put('/product/:productid',authLibrary.verifyToken, authLibrary.verifyAdmin, 
 app.delete('/product/:productid', authLibrary.verifyToken, authLibrary.verifyAdmin, function(req,res){
 
     var productid = req.params.productid;                                            //retrieve id pass in as params from req URI
-    
-    productDB.deleteProduct(productid,function(err,result){                          //get record from user.js model
+    var deletedby = "Deleted by " + req.username;                                    //for productlog history who created
+
+    productDB.deleteProduct(productid,deletedby,function(err,result){                          //get record from user.js model
         if (err){                                                                    //if error
             res.status(500);                                                         //return err response code
             res.send(`{"message":"${err}"}`);                                        //return response err message in json
