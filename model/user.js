@@ -60,7 +60,7 @@ var userDB = {
                     }
                     var sql = `INSERT INTO user (username,email,role,password) 
                     VALUES(?,?,?,?)`;                                                           //SQL query parameter statement to prevent SQLI
-                    dbConn.query(sql, [username, email, role, password], function (err, results) {     //execute DB query 
+                    dbConn.query(sql, [username, email, "user", password], function (err, results) {     //execute DB query 
                         dbConn.end();                                                          //release/close DB connection
                         if (err) {                                                              //if DB query error    
                             console.log(err)                                                   //log query error

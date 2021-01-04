@@ -20,7 +20,7 @@
 
 //import multer for upload image
 var multer  = require('multer')
-//define upload product image's server location and filename
+//multer define upload product image's server location and using original filename
 var storage = multer.diskStorage({
     destination: function (req, file, cb) {
       //cb(null, './upload')
@@ -29,8 +29,17 @@ var storage = multer.diskStorage({
     filename: function (req, file, cb) {
       cb(null, file.originalname)
     }
-})
-var upload = multer({ storage: storage })
+});
+//multer define file type
+const fileFilter = (req, file, cb) => {
+    if (file.mimetype == 'image/jpeg' || file.mimetype == 'image/png') {
+        cb(null, true);
+    } else {
+        cb(null, false);
+    }
+}
+
+var upload = multer({ storage: storage, fileFilter: fileFilter })
 
  //create an express app instance
  var app=express();
@@ -367,7 +376,7 @@ app.get('/product/:productid', function(req,res){
 });
 
 //Upload route
-app.post('/product/upload', upload.single('image'), (req, res) => {
+app.post('/product/upload',authLibrary.verifyToken, authLibrary.verifyAdmin, upload.single('image'), (req, res) => {
     console.log("uploading")
     try {
         return res.status(201).json({
