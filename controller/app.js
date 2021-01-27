@@ -18,9 +18,36 @@
  //import cross origin policy lib
  var cors= require('cors');
 
+ //import aws sdk 
+ var aws = require('aws-sdk')
 //import multer for upload image
 var multer  = require('multer')
-//multer define upload product image's server location and using original filename
+var multerS3 = require('multer-s3')
+
+//configure aws s3 upload
+aws.config.update({
+    secretAccessKey: 'ZWyjYFR7KKVqkoFY7dn05HAhJ6ZlT17Du6xKTJoy',
+    accessKeyId:'AKIAJXAKINJ3EUYBVDAQ',
+    region: 'us-east-1'
+});
+var s3 = new aws.S3();
+
+const upload = multer({
+    storage:multerS3({
+        s3:s3,
+        bucket:'bdd-image',
+        acl: 'public-read',
+        metadata:function(req, file, cb){
+            cb(null,{fieldname: 'TESTING_META_DATA'});
+        },
+        key:function(req,file,cb){
+            cb(null,file.originalname)
+        }
+    })
+})
+
+/*
+//multer define upload product image's local server location and using original filename
 var storage = multer.diskStorage({
     destination: function (req, file, cb) {
       //cb(null, './upload')
@@ -39,7 +66,10 @@ const fileFilter = (req, file, cb) => {
     }
 }
 
+
 var upload = multer({ storage: storage, fileFilter: fileFilter })
+*/
+
 
  //create an express app instance
  var app=express();
@@ -112,7 +142,7 @@ app.post('/user', validateLibrary.validateUserRegistration, function(req,res){
     });
 });
 
-//PUT - endpoint to Update user record by id
+//PUT - (Admin-for all user, For user only his ID )endpoint to Update user record by id
 app.put('/user/:userid',authLibrary.verifyToken, authLibrary.verifyAdminOrUserId, function(req,res){
 
     var userid = req.params.userid;                                             //retrieve id pass in as params from req URI
@@ -376,7 +406,7 @@ app.get('/product/:productid', function(req,res){
 });
 
 //Upload route
-app.post('/product/upload',authLibrary.verifyToken, authLibrary.verifyAdmin, upload.single('image'), (req, res) => {
+app.post('/product/upload',/*authLibrary.verifyToken, authLibrary.verifyAdmin,*/ upload.single('image'), (req, res) => {
     console.log("uploading")
     try {
         return res.status(201).json({

@@ -4,12 +4,13 @@
              $("#Load").click(function () {  
                  $.ajax({  		 
                      url: 'http://localhost:8081/user/'+$('#id').val() ,  
-                     type: 'GET',  
+                     type: 'GET',
+                     headers: {"Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyaWQiOjEwLCJ1c2VybmFtZSI6ImFkbWluMSIsInJvbGUiOiJhZG1pbiIsImVtYWlsIjoiYWRtaW4xQGdtYWlsLmNvbSIsImlhdCI6MTYwOTc0Nzk5MCwiZXhwIjoxNjA5NzYyMzkwfQ.V7y8Xsk74ZAPhFiF1jJ9TQqYLHKxOWl8BZJ-n_AeaQ8"},  
                      dataType: 'json',  
                      success: function (data, textStatus, xhr) {  
                          console.log(data); 
-			 console.log(data.username); 
-	           $("#personData").html(data.username);
+			             console.log(data.username); 
+	                     $("#personData").html(data.username);
 						 					 
                      },  
                      error: function (xhr, textStatus, errorThrown) {  
