@@ -8,6 +8,10 @@
   },
   "author": "TanPangWee",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PwtanSG/spmart.git"
+  },
   "dependencies": {
     "aws-sdk": "^2.831.0",
     "bcryptjs": "^2.4.3",
