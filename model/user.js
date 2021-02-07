@@ -31,8 +31,10 @@ var userDB = {
         var dbConn = db.getConnection();
         dbConn.connect(function (err) {
             if (err) {                                               //if DB connection Error
+                console.log(err)
                 return callback(err, null)                           //return error, null result
-            } else {                                                  //if DB connection Successful
+            } else {  
+                console.log("connected!")                                                //if DB connection Successful
                 var sql = "SELECT * FROM user WHERE userid=?";      //SQL query parameter statement to prevent SQLI
                 dbConn.query(sql, [userid], function (err, results) {    //execute DB query 
                     dbConn.end();                                   //release/close DB connection
