@@ -16,6 +16,8 @@ app.get('/', function (req, res) {
     res.send('Hello World! this is a web api for CA2!!!1 on AWS');
   });
 
+ /*
+
 app.post('/api/user',verifyToken,function(req,res){
 
     var username=req.body.username;
@@ -38,6 +40,8 @@ app.post('/api/user',verifyToken,function(req,res){
 
 });
 
+*/
+
 app.get('/api/user/:userid',function(req,res){
 
     var id=req.params.userid;
@@ -59,7 +63,7 @@ app.get('/api/user/:userid',function(req,res){
 
 });
 
-
+/*
 app.post('/api/login',function(req,res){
 
     var email=req.body.email;
@@ -79,5 +83,6 @@ app.post('/api/login',function(req,res){
 
 
 });
+*/
 
 module.exports=app;
