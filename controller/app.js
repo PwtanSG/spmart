@@ -88,6 +88,10 @@ var upload = multer({ storage: storage, fileFilter: fileFilter })
  
 // Defining Webservices endpoint (VERB+URL) 
 
+app.get('/', function (req, res) {
+    res.send('Hello! this is a web api for CA2');
+});
+
 //GET - (Admin ONLY) end point to retrieve records of all users
 app.get('/user',authLibrary.verifyToken, authLibrary.verifyAdmin, function(req,res){                                //get db record through user.js model
 
