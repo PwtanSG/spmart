@@ -36,9 +36,12 @@ var productDB = {                                                          //asy
                     if (err) {                                       //if DB query error    
                         console.log(err)                            //log query error
                     }
-                    //console.log("get product id")
-                    //console.log(results)
-                    console.log(results[0].productid + " " + results[0].name + " " + results[0].description + " "+ results[0].price + " " + results[0].imageurl + " " + results[0].categoryid)
+
+                    if (Object.keys(results).length === 0) {                       //if record not found, return err in json
+                        //console.log("nothing")
+                        err = " id:" + productid + " not found"
+                    }
+                    //console.log(results[0].productid + " " + results[0].name + " " + results[0].description + " "+ results[0].price + " " + results[0].imageurl + " " + results[0].categoryid)
                     return callback(err, results)                    //return callback of DB query, either err or result     
                 });
             }
@@ -134,28 +137,46 @@ var productDB = {                                                          //asy
             if (err) {                                                                        //if DB connection Error
                 return callback(err, null)                                                    //return error, null result
             } else {//if DB connection Successful,update product table
-                var sql = "UPDATE products SET name=?, description=?, price=?, imageurl=?, categoryid=? WHERE productid = ?";                                                       //SQL query parameter statement to prevent SQLI
-                dbConn.query(sql, [name, description, price, imageurl, categoryid, productid], function (err, results) {             //execute DB query 
-                    if (err) {                                                                //if DB query error    
-                        console.log(err)                                                      //log query error
-                    } else { //if no error, update productlog table
-                        var sql1 = `INSERT INTO productlog (productid,name, description, price, imageurl, categoryid,updatedby) 
-                        VALUES(?,?,?,?,?,?,?)`;                                                 //SQL query parameter statement to prevent SQLI
-                        dbConn.query(sql1, [productid, name, description, price, imageurl, categoryid, updatedby], function (err, result1) {     //execute DB query 
-                            if (err) {                                                          //if DB query error    
-                                console.log(err)                                                //log query error
-                            }
-                        });
+
+                var sql0 = "SELECT * FROM products WHERE productid=?";      //SQL query parameter statement to prevent SQLI
+                dbConn.query(sql0, [productid], function (err, result0) {    //execute DB query 
+                    if (err) {                                       //if DB query error    
+                        console.log(err)                            //log query error
+                        return callback(err, null) 
+                    } else {
+                        if (Object.keys(result0).length === 0) {                       //if record not found, return err in json
+                            //console.log("nothing")
+                            err = " id:" + productid + " not found"
+                            return callback(err, null) 
+                        } else {
+                            var sql = "UPDATE products SET name=?, description=?, price=?, imageurl=?, categoryid=? WHERE productid = ?";                                                       //SQL query parameter statement to prevent SQLI
+                            dbConn.query(sql, [name, description, price, imageurl, categoryid, productid], function (err, results) {             //execute DB query 
+                                if (err) {                                                                //if DB query error    
+                                    console.log(err)                                                      //log query error
+                                } else { //if no error, update productlog table
+                                    var sql1 = `INSERT INTO productlog (productid,name, description, price, imageurl, categoryid,updatedby) 
+                                    VALUES(?,?,?,?,?,?,?)`;                                                 //SQL query parameter statement to prevent SQLI
+                                    dbConn.query(sql1, [productid, name, description, price, imageurl, categoryid, updatedby], function (err, result1) {     //execute DB query 
+                                        if (err) {                                                          //if DB query error    
+                                            console.log(err)                                                //log query error
+                                        }
+                                    });
+                                }
+                                //return callback of DB query, either err or result     
+                                dbConn.end();                                                             //release/close DB connection
+                                return callback(err, results)    
+                            });
+                        }
                     }
-                    dbConn.end();                                                             //release/close DB connection
-                    return callback(err, results)                                             //return callback of DB query, either err or result     
+   
                 });
+
             }
         });
     },
 
     //delete a product record by id
-    deleteProduct: function (productid,deletedby, callback) {
+    deleteProduct: function (productid, deletedby, callback) {
         var dbConn = db.getConnection();
         var resultx;
         dbConn.connect(function (err) {
@@ -163,32 +184,35 @@ var productDB = {                                                          //asy
                 return callback(err, null)                                  //return error, null result
             } else {                                                        //if DB connection Successful
 
-                // readback product details for log history use
+                // readback product details for logging of history use
                 var sql1 = "SELECT * FROM products WHERE productid=?";       //SQL query parameter statement to prevent SQLI
                 dbConn.query(sql1, [productid], function (err, result1) {    //execute DB query 
                     if (err) {                                              //if DB query error    
                         console.log(err)                                    //log query error
-                    }
-                    resultx = result1[0];
-                });
-
-                //proceed to delete product
-                var sql = "DELETE FROM products WHERE productid=?";         //SQL query parameter statement to prevent SQLI
-                dbConn.query(sql, [productid], function (err, results) {    //execute DB query 
-                    if (err) {                                              //if DB query error    
-                        console.log(err)                                    //log query error
-                    }else { //delete successful log history 
-                        var sql2 = `INSERT INTO productlog (productid,name, description, price, imageurl, categoryid,updatedby) 
+                    } else { // after readback no error then delete
+                        resultx = result1[0]; //
+                        //proceed to delete product
+                        var sql = "DELETE FROM products WHERE productid=?";         //SQL query parameter statement to prevent SQLI
+                        dbConn.query(sql, [productid], function (err, results) {    //execute DB query 
+                            if (err) {                                              //if DB query error    
+                                console.log(err)                                    //log query error
+                            } else { //delete successful log history 
+                                var sql2 = `INSERT INTO productlog (productid,name, description, price, imageurl, categoryid,updatedby) 
                         VALUES(?,?,?,?,?,?,?)`;                                                 //SQL query parameter statement to prevent SQLI
-                        dbConn.query(sql2, [resultx.productid, resultx.name, resultx.description, resultx.price, resultx.imageurl, resultx.categoryid, deletedby], function (err, result2) {     //execute DB query 
-                            if (err) {                                                          //if DB query error    
-                                console.log(err)                                                //log query error
+                                dbConn.query(sql2, [resultx.productid, resultx.name, resultx.description, resultx.price, resultx.imageurl, resultx.categoryid, deletedby], function (err, result2) {     //execute DB query 
+                                    if (err) {                                                          //if DB query error    
+                                        console.log(err)                                                //log query error
+                                    }
+                                });
                             }
+                            dbConn.end();                                           //release/close DB connection
+                            return callback(err, results)                           //return callback of DB query, either err or result     
                         });
                     }
-                    dbConn.end();                                           //release/close DB connection
-                    return callback(err, results)                           //return callback of DB query, either err or result     
+
                 });
+
+
             }
         });
     },

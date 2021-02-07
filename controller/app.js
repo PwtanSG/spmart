@@ -406,7 +406,7 @@ app.get('/product/:productid', function(req,res){
 });
 
 //Upload route
-app.post('/product/upload',/*authLibrary.verifyToken, authLibrary.verifyAdmin,*/ upload.single('image'), (req, res) => {
+app.post('/product/upload',authLibrary.verifyToken, authLibrary.verifyAdmin, upload.single('image'), (req, res) => {
     console.log("uploading")
     try {
         return res.status(201).json({
