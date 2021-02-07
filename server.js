@@ -22,5 +22,5 @@ var port=8081;
 
 var server=app.listen(port,function(){
 
-    console.log("Web App hosted t http://localhost:%s",port);
+    console.log("Web App hosted on EC2 http://localhost:%s",port);
 });
