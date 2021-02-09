@@ -29,8 +29,8 @@ var multerS3 = require('multer-s3')
 
 //configure aws s3 upload
 aws.config.update({
-    secretAccessKey: 'ZWyjYFR7KKVqkoFY7dn05HAhJ6ZlT17Du6xKTJoy',
-    accessKeyId:'AKIAJXAKINJ3EUYBVDAQ',
+    secretAccessKey: '',
+    accessKeyId:'',
     region: 'us-east-1'
 });
 var s3 = new aws.S3();
